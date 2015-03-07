@@ -4,7 +4,6 @@
  * @author alteredq / http://alteredqualia.com/
  * @author WestLangley / http://github.com/WestLangley
  * @author erich666 / http://erichaines.com
- * @author mrflix / http://felixniklas.de
  */
 /*global THREE, console */
 
@@ -22,11 +21,10 @@
 //      controls.target.z = 150;
 // Simple substitute "OrbitControls" and the control should work as-is.
 
-THREE.OrbitControls = function ( object, domElement, localElement ) {
+THREE.OrbitControls = function ( object, domElement ) {
 
 	this.object = object;
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
-	this.localElement = ( localElement !== undefined ) ? localElement : document;
 
 	// API
 
@@ -570,13 +568,13 @@ THREE.OrbitControls = function ( object, domElement, localElement ) {
 	}
 
 	this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-	this.localElement.addEventListener( 'mousedown', onMouseDown, false );
+	this.domElement.addEventListener( 'mousedown', onMouseDown, false );
 	this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
 	this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
 
 	this.domElement.addEventListener( 'keydown', onKeyDown, false );
 
-	this.localElement.addEventListener( 'touchstart', touchstart, false );
+	this.domElement.addEventListener( 'touchstart', touchstart, false );
 	this.domElement.addEventListener( 'touchend', touchend, false );
 	this.domElement.addEventListener( 'touchmove', touchmove, false );
 
