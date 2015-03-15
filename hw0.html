@@ -43,7 +43,14 @@ function init()
 
 	cube.position.set (50, 10, 50);
 	scene.add (cube);
-
+	
+	var geometry = new THREE.SphereGeometry( 5, 32, 32 );
+	var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+	var sphere = new THREE.Mesh( geometry, material );
+	
+	sphere.position.set(10, 10, 10);
+	scene.add( sphere );
+	
 	camera = new THREE.PerspectiveCamera (45, width/height, 1, 10000);
 	camera.position.y = 160;
 	camera.position.z = 400;
