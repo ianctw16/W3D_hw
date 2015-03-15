@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+	#info {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+	font-size: 20px;
+    padding: 5px;
+    text-align: center;
+    color: #5555FF;
+}
+	strong {color: red}
+</style>
+</head>
+
+<body>
+<div id="info">
+	HW 1 <br/>
+	BGM (<a href="javascript:toggle();">dimmer</a>) <br/>
+	type <strong> Z </strong> to toggle the plane<br/>
+	
+</div>
+
+<audio id="soundtrack" autoplay loop style="display:none">
+<source src="BGM/BGM.mp3" type='audio/mp3'>
+</audio>
+
+<script src='js/three.min.js'></script>
+<script src='js/KeyboardState.js'></script>
+<script src='js/OrbitControls.js'>
+</script>
+
+<script>
+
+var camera, cameraBack, scene, sceneBack;
+var renderer, sun, earth, angle = 0;
+var clock = new THREE.Clock(), controls, keyboard = new KeyboardState();
+var turn = true;
+var soundTrack, soundVal = 0.5, sign = 0.5, isPaused = false;
+
+init();
+animate();
+
+function toggle() {
+	isPaused = !isPaused;
+	sign = isPaused ? -1 : 1;
+	console.log (isPaused);
+}
+
+function init() {
+	soundTrack = document.getElementById ('soundtrack');
+	
+	sceneBack = new THREE.Scene();
+	cameraBack = new THREE.OrthographicCamera(-10, 10, 10, -10, 1, 100);
+    cameraBack.position.z = 5;
+    cameraBack.lookAt(new THREE.Vector3(0, 0, 0));
+
+	
+	var texture = THREE.ImageUtils.loadTexture('back/texture__space.jpg');
+    var back = new THREE.Mesh(new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0.5
+    }));
+    back.material.depthTest = false;
+    back.material.depthWrite = false;
+    sceneBack.add(back);
+	
+    clock = new THREE.Clock();
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.z = 250;
+	camera.position.y = 150;
+    scene.add(camera);
+	
+	var suntexture = THREE.ImageUtils.loadTexture('texture/preview_sun.jpg');
+	var earthtexture = THREE.ImageUtils.loadTexture('texture/earthmap1k.jpg');
+	var moontexture = THREE.ImageUtils.loadTexture('texture/moonbump1k.jpg');
+	
+    sun = new THREE.Mesh(new THREE.SphereGeometry(30,100,100),
+    new THREE.MeshBasicMaterial({
+        map: suntexture,
+		//wireframe: true
+    }));
+
+    earth = new THREE.Mesh(new THREE.SphereGeometry(10,100,100),
+    new THREE.MeshPhongMaterial({
+		map: earthtexture,
+        //wireframe: true
+    }));
+    moon = new THREE.Mesh(new THREE.SphereGeometry(3,100,100),
+    new THREE.MeshPhongMaterial({
+        map: moontexture,
+		//wireframe: true
+    }));
+    earth.add(moon);
+    sun.add(earth);
+    scene.add(sun);
+
+    /*var gridXZ = new THREE.GridHelper(100, 10);
+    gridXZ.setColors(new THREE.Color(0xff0000), new THREE.Color(0xffffff));
+    scene.add(gridXZ);*/
+
+    light = new THREE.PointLight(0xffffff);
+    light.position.set(0, 0, 0);
+    scene.add(light);
+
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x888888);
+	
+	renderer.autoClear = false;
+	
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    document.body.appendChild(renderer.domElement);
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+
+function toggleTurn ()
+{
+	turn = !turn;
+}
+
+function animate() {
+	
+	soundVal += sign*0.01;
+	soundVal = THREE.Math.clamp (soundVal, 0, 1);
+	soundtrack.volume = soundVal;
+
+    var dt = clock.getDelta()/50;
+	
+    earth.position.set(90 * Math.cos(angle), 0, -90 * Math.sin(angle));
+    earth.rotation.y =  365.25 * angle;
+	
+    angle2 = 12 * angle;
+    moon.position.set(20 * Math.cos(angle2 - 365.25 * angle), 0, -20 * Math.sin(angle2 - 365.25 * angle));
+    moon.rotation.y = angle2 - 365.25 * angle;
+	
+	if(turn) {
+		angle -= dt;
+	}
+    
+	requestAnimationFrame(animate);
+    render();
+	update();
+}
+
+function update()
+{
+	keyboard.update();
+	controls.update();
+	//angleInfoEle.innerHTML = "";
+	// console.log ("angle: " + angle);  print to console
+	if ( keyboard.down("Z"))  // yes, must use UPPER CASE
+		toggleTurn();         
+	/*if (! turn)
+		angleInfoEle.innerHTML = angle;
+	*/
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function render() {
+    
+    renderer.render(scene, camera);
+}
+
+
+
+</script>
+</body>
+
+</html>
