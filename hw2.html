@@ -72,13 +72,13 @@ function init()
 	
 	var goldentexture = THREE.ImageUtils.loadTexture('texture/goldtexture.jpg');
 	var woodtexture = THREE.ImageUtils.loadTexture('texture/woodtexture.jpg');
-	var woodbumpmap = THREE.ImageUtils.loadTexture('texture/woodtexture_gray.png');
+	var woodbumpmap = THREE.ImageUtils.loadTexture('texture/woodtexture_threshold.jpg');
 	var cubeGeometry = new THREE.BoxGeometry (80, 10, 10);
 	var cubeMaterial = 
 		new THREE.MeshPhongMaterial ({
 			map: woodtexture,
 			bumpmap: woodbumpmap,
-			bumpscale: 0.8,
+			bumpscale: 0.5,
 			side: THREE.DoubleSide
 		});
 	cube = new THREE.Mesh (cubeGeometry, cubeMaterial);
