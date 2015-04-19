@@ -2,21 +2,24 @@
 <html>
 <head>
 <style>
-	canvas {
-		position: fixed;
-		top: 0;
-		left: 0;
-	}
+	#speed {
+    position: absolute;
+    Top: 100px;
+    width: 100%;
+    color: #FF3333;
+    text-align: center;
+}
 </style>
 </head>
 
 <body>
+<div id="speed"></div>
 <script src="js/three.min.js"></script>
 <script src="js/OrbitControls.js"></script>
 <script src="js/KeyboardState.js"></script>
+<script src="dat.gui.min.js"></script>
 
 <script>
-
 var camera, scene, renderer, geometry, material, light, controls;
 var rt, alpha, h, ly;
 var angle = 0, speed = 0;
@@ -25,14 +28,17 @@ var keyboard = new KeyboardState(), turn = true;
 var pos = new THREE.Vector3(0,0,0);
 var clock = new THREE.Clock();
 var sign = 1;
-	
+var t = 0, z = 0;	
+var character;
+var speedInfo;
 init();
 animate();
 
 function init() {
 
     scene = new THREE.Scene();
-
+	speedInfo = window.document.getElementById('speed');
+	
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
     camera.position.x = -500;
 	camera.position.y = 200;
@@ -82,16 +88,111 @@ function init() {
     }));
     mesh2.rotation.x = Math.PI / 2;
     mesh.position.set(0, 0, 10);
+	mesh2.castShadow = true;
     mesh0 = mesh.clone();
     mesh0.position.set(0, 0, -10);
     mesh0.rotation.y = Math.PI;
-    tire.add (mesh);
+    tire.add(mesh);
     tire.add(mesh0);
     tire.add(mesh2);
-    scene.add(tire);
-    tire.position.set (0,50,0);
     
-
+	//tire2
+	tire2 = new THREE.Object3D();
+	/*tire2.add(mesh);
+	tire2.add(mesh0);
+	tire2.add(mesh2);*/
+	tire2 = tire.clone();
+	
+	var step = 0;
+	
+	//control gui
+	var controlgui = new function(){
+		this.animations = 'crattack';
+		this.fps = 10;
+	}
+	
+	var gui = new dat.GUI();
+	
+	var loader = new THREE.JSONLoader();
+	loader.load('texture/METAL_SONIC.js',function(loadgeometry, mat){
+		loadgeometry.computeMorphNormals();
+		var mat = new THREE.MeshPhongMaterial({
+				map: THREE.ImageUtils.loadTexture("texture/METAL_SONIC.png"),
+				morphTargets: true,
+				morphNormals: true
+		});
+		
+	character = new THREE.MorphAnimMesh(loadgeometry, mat);
+	character.rotation.y = Math.PI;
+	character.parseAnimations();	
+		
+	var	animLabels = [];
+	/*for(var key in character.loadgeometry.animations){
+		if(key === 'length' || !character.loadgeometry.animations.hasOwnProperty(key)) 
+			continue;
+		animLabels.push(key);	
+	}*/
+	
+	/*gui.add(controlgui, 'animations', animLabels).onchange(function(e){
+		character.playAnimation(controlgui.animations, controlgui.fps);
+	});
+	
+	gui.add(controlgui, 'fps', 1, 20).set(1).onchange(function (e){
+		character.playAnimation(controlgui.animations, controlgui.fps);
+	});*/
+	//character.PlayAnimation('crattack', 10);
+	scene.add(character);
+	stelar.add(character);
+	character.rotation.y = 0;
+	character.scale.set(4, 5, 5);
+	character.position.set(20, 2, 0);
+	character.castShadow = true;
+	});
+	
+	//footstep
+	var footstepGeometry = new THREE.BoxGeometry (40, 10, 80);
+	var footstepMaterial = 
+		new THREE.MeshPhongMaterial ({
+			map: lampmap,
+			side: THREE.DoubleSide
+		});
+	var footstep = new THREE.Mesh (footstepGeometry, footstepMaterial);
+	//footstep.position.set(0,0,50);
+	footstep.castShadow = true;
+	
+	//midcylinder
+	var midcylinder = new THREE.Mesh(new THREE.CylinderGeometry(5,5,180,64),
+    new THREE.MeshPhongMaterial({
+        map: lampmap,
+    }));
+	//midcylinder.rotation.x = 1.55;
+	midcylinder.castShadow = true;
+	midcylinder.receiveShadow = true;
+	
+	//topcylinder
+	var topcylinder = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 80, 64),
+	new THREE.MeshPhongMaterial({
+		map: lampmap,
+	}));
+	topcylinder.castShadow = true;
+	topcylinder.receiveShadow = true;
+	
+	//stelar
+	stelar = new THREE.Object3D();
+	stelar.add(footstep);
+	stelar.add(midcylinder);
+	stelar.add(topcylinder);
+	
+	tire.add(stelar);
+	tire.add(tire2);
+	scene.add(tire);
+    tire.position.set (0, 50, 0);
+	tire2.position.set(0, 0, 100);
+	midcylinder.position.set(-15, 80, 0);
+	topcylinder.position.set(-15,160, 0);
+	topcylinder.rotation.x = Math.PI / 2;
+	stelar.position.set(0, 0, 50);
+	
 	//spotlight	
     light = new THREE.SpotLight(0xFFEE99, 1);
     light.position.set(0, ly, 0);
@@ -138,12 +239,14 @@ function init() {
 	renderer.shadowMapEnabled = true;
 	renderer.shadowMapType = THREE.PCFSoftShadowMap;
 	
-	mesh2.castShadow = true;
+	stelar.castShadow = true;
+	stelar.receiveShadow = false;
 	floor.castShadow	= false;
 	floor.receiveShadow = true;
     tire.castShadow = true;
 	tire.receiveShadow	= false;
-	
+	tire2.castShadow = true;
+	tire2.receiveShadow = false;
 	
 	window.addEventListener ('resize', onWindowResize, false);	
 }
@@ -172,11 +275,17 @@ function animate() {
 		new THREE.Vector3(0,1,0), angle);
 	pos.add (dir);
 	
+	var text = 'speed:'+speed;
+    
+    speedInfo.innerHTML = text;
+    // number format ?!
+	
 	if (tire != undefined) { 
 		tire.scale.set (0.2,0.2,0.2);
 		tire.position.set (pos.x, 10, pos.z);
 		tire.rotation.y = angle - Math.PI;
 		tire.rotation.z += speed*10*dt;
+		stelar.rotation.z -= speed*10*dt;
 		}
 	
     requestAnimationFrame(animate);
@@ -197,12 +306,29 @@ function update()
 	keyboard.update();         
 	if ( keyboard.pressed("left") ) 
 		angle += 0.01;               
-	if ( keyboard.pressed("right") )
-		angle -= 0.01;               
-	if ( keyboard.pressed("up") )  
-		speed += 0.5;        
-	if ( keyboard.pressed("down") )  
-		speed -= 0.5;    
+	if ( keyboard.pressed("right") ){
+		angle -= 0.01;
+		//midcylinder.rotation.x += 0.1;
+		//midcylinder.rotation.x -= 0.1;
+		
+	}		
+	if ( keyboard.pressed("up") ) {
+		speed += 0.5;
+		t++;
+		if(t > 100)
+			t = 2;
+		if(t == 1)
+			stelar.rotation.z += 0.1;
+	} 	
+	if ( keyboard.pressed("down") ){
+		speed -= 0.5;
+		if(speed == 0.5){
+			t = 0;
+			stelar.rotation.z -= 0.1;
+		}
+			
+	}  
+		    
 
 	speed = myclamp (speed, 0.0, 20.0);		
 }
@@ -215,6 +341,11 @@ function onWindowResize()
 }
 
 function render() {
+	var dt = clock.getDelta();
+	if (character) {
+			character.updateAnimation(dt * 20);
+			// mesh.rotation.y+=0.01;
+		}
     renderer.render(scene, camera);
 }
 </script>
