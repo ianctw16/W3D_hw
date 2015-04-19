@@ -2,9 +2,18 @@
 <html>
 <head>
 <style>
+	#info {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    color: #ff0000
+}
+	
 	#speed {
     position: absolute;
-    Top: 100px;
+    bottom: 100px;
     width: 100%;
     color: #FF3333;
     text-align: center;
@@ -14,6 +23,10 @@
 
 <body>
 <div id="speed"></div>
+<div id="info">Third person view / Free view
+    <br/> <a href="javascript:Toggle();">div </a>
+
+</div>
 <script src="js/three.min.js"></script>
 <script src="js/OrbitControls.js"></script>
 <script src="js/KeyboardState.js"></script>
@@ -31,8 +44,13 @@ var sign = 1;
 var t = 0, z = 0;	
 var character;
 var speedInfo;
+var toggleturn = false;
 init();
 animate();
+
+function Toggle() {
+    toggleturn = !toggleturn;
+}
 
 function init() {
 
@@ -106,7 +124,8 @@ function init() {
 	var step = 0;
 	
 	//control gui
-	var controlgui = new function(){
+	var controlgui = new function(object){
+		character = object;
 		this.animations = 'crattack';
 		this.fps = 10;
 	}
@@ -286,7 +305,22 @@ function animate() {
 		tire.rotation.y = angle - Math.PI;
 		tire.rotation.z += speed*10*dt;
 		stelar.rotation.z -= speed*10*dt;
+		if(toggleturn == true){
+			var relativeCameraOffset = new THREE.Vector3 (200,100,0);
+
+			var cameraOffset = relativeCameraOffset.applyMatrix4( 
+				character.matrixWorld );
+			camera.position.x = cameraOffset.x;
+			camera.position.y = cameraOffset.y;
+			camera.position.z = cameraOffset.z;
+			camera.lookAt( tire.position );
 		}
+		else{
+			//camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+			camera.position.x = -500;
+			camera.position.y = 200;
+		}
+	}
 	
     requestAnimationFrame(animate);
 	update();
