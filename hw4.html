@@ -33,7 +33,7 @@
 <script src="dat.gui.min.js"></script>
 
 <script>
-var camera, scene, renderer, geometry, material, light, controls;
+var camera, camera2, scene, renderer, geometry, material, light, controls;
 var rt, alpha, h, ly;
 var angle = 0, speed = 0;
 var lampmesh, lampgeometry, lampmaterial;
@@ -61,7 +61,10 @@ function init() {
     camera.position.x = -500;
 	camera.position.y = 200;
     scene.add(camera);
-
+	
+	/*camera2 = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+	scene.add(camera2);*/
+	
 	THREE.ImageUtils.crossOrigin = '';
     var colormap = THREE.ImageUtils.loadTexture('texture/tire.png');
     var colormap2 = THREE.ImageUtils.loadTexture('texture/tread pattern.jpg');
@@ -316,9 +319,12 @@ function animate() {
 			camera.lookAt( tire.position );
 		}
 		else{
-			//camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+			/*controls = new THREE.OrbitControls(camera, renderer.domElement);
+			camera2.position.x = -500;
+			camera2.position.y = 200;*/
 			camera.position.x = -500;
 			camera.position.y = 200;
+			//camera.setViewOffset(window.width, window.height,10,10,100,100);
 		}
 	}
 	
