@@ -17,12 +17,13 @@ body {
 </head>
 
 <body>
-<div id="info">hw6</div>
+<div id="info">Render to Texture
+    <br>(shader to cutout)
+    <br>with shadow</div>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+<script src="https://dl.dropboxusercontent.com/u/3587259/Code/Threejs/OrbitControls.js">
     
-<script src="js/three.min.js"></script>
-<script src="js/OrbitControls.js">  
 </script>
-    
 <script id="myVertexShader" type="x-shader/x-vertex">
     varying vec2 vUv;
     void main() {
@@ -67,7 +68,7 @@ body {
 <script>
 
 var camera, scene, renderer, light, controls;
-var sceneRTT, rtTexture, charactor;
+var sceneRTT, rtTexture, teapot;
 var angle = 0;
 
 init();
@@ -87,18 +88,13 @@ function init() {
     });
 
     var jsonLoader = new THREE.JSONLoader();
-    jsonLoader.load("texture/METAL_SONIC.js", function (geometry) {
-        charactor = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-            map: THREE.ImageUtils.loadTexture("texture/METAL_SONIC.png"),
+    jsonLoader.load("http://jyunming-chen.github.io/tutsplus/models/teapot.json", function (geometry) {
+        teapot = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+            color: 0xff1234
         }));
-        
-        
-        charactor.rotation.y=Math.PI/2;
-        charactor.scale.set(4, 5, 6);
-        sceneRTT.add(charactor);
+        teapot.scale.set(32, 32, 32);
+        sceneRTT.add(teapot);
     });
-
-
 
     ///////////////////////////////////////////////////////////////////////////
     scene = new THREE.Scene();
@@ -109,9 +105,8 @@ function init() {
     renderer.setClearColor(0x888888);
 
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.x = -80;
-    camera.position.y = 100;
-    camera.position.z = 500;
+    camera.position.y = 80;
+    camera.position.z = 400;
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -135,8 +130,7 @@ function init() {
     });
     quad = new THREE.Mesh(plane, rttmaterial);
     quad.position.set(0, 20, 0);
-    quad.rotation.y = Math.PI;
-    //scene.add(quad);
+    scene.add(quad);
 
     //////////////////////////////////////////////////////////////////////////
     // shadowing ///////////////
@@ -155,26 +149,17 @@ function init() {
         vertexShader: document.getElementById('myVertexShader').textContent,
         fragmentShader: document.getElementById('fragmentShaderDepth').textContent
     });
-    for (var i = -2; i <= 2; i++){
+    
+    /*for (var i = -2; i <= 2; i++){
         for (var j = -2; j <= 2; j++) {
             var quadij = quad.clone();
-            quadij.position.set (50*i,0,50*j);
+            quadij.position.set (500*i,0,500*j);
             scene.add (quadij);
-            
-            quadij.castShadow = true;
-            quadij.customDepthMaterial = new THREE.ShaderMaterial({
-                side: THREE.DoubleSide,
-                uniforms: {
-                    texture: {
-                        type: 't',
-                        value: rtTexture
-                        }
-                    },
-                vertexShader: document.getElementById('myVertexShader').textContent,
-                fragmentShader: document.getElementById('fragmentShaderDepth').textContent
-                });
+            document.getElementById('myVertexShader').textContent;
+            document.getElementById('fragmentShaderDepth').textContent;
             }
-        }
+        }*/
+        
 
     spotLight = new THREE.SpotLight(0xffffff, 1);
     spotLight.position.set(0, 300, 300);
@@ -194,21 +179,19 @@ function init() {
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
     ground.receiveShadow = true;
-
 }
+
 function animate() {
-    /*
-    angle += 0.02;
-    if (charactor !== undefined) charactor.rotation.y = angle;
-    */
     controls.update();
-    rotateBillboard (quad);
+    angle += 0.02;
+    if (teapot !== undefined) teapot.rotation.y = angle;
+
     requestAnimationFrame(animate);
     render();
 }
 
 function render() {
-    // render charactor to texture
+    // render teapot to texture
     renderer.setClearColor(0x0000ff);
     renderer.render(sceneRTT, camera, rtTexture, true);
 
@@ -216,28 +199,6 @@ function render() {
     renderer.setClearColor(0x888888);
     renderer.render(scene, camera);
 }
-
-function rotateBillboard (mesh){
-    var b = mesh.position.clone();  // billboard location
-    var rotaxis = new THREE.Vector3();
-    var v, yhat, n;
-    
-    v = camera.position.clone(); // clone the camera position
-    yhat = new THREE.Vector3(0, 1, 0); // up
-    n = new THREE.Vector3(0, 0, 1); // billboard normal
-
-    v.subVectors(v, b); // v-b
-    v.sub(yhat.clone().multiplyScalar(v.dot(yhat)));
-    v.normalize(); // pxz
-
-    rotangle = Math.acos(v.dot(n));
-    rotaxis.crossVectors(n, v);
-    if (rotaxis.dot(yhat) < 0) rotangle *= -1;
-
-    mesh.rotation.y = rotangle;
-    
-}
-
 </script>
 </body>
 
