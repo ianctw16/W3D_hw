@@ -87,12 +87,12 @@ function init() {
     });
 
     var jsonLoader = new THREE.JSONLoader();
-    jsonLoader.load("http://jyunming-chen.github.io/tutsplus/models/teapot.json", function (geometry) {
-        teapot = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-            color: 0xff1234
+    jsonLoader.load("texture/METAL_SONIC.js", function (geometry) {
+        charactor = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+            map: THREE.ImageUtils.loadTexture("texture/METAL_SONIC.png"),
         }));
-        teapot.scale.set(32, 32, 32);
-        sceneRTT.add(teapot);
+        charactor.scale.set(4, 5, 6);
+        sceneRTT.add(charactor);
     });
 
 
