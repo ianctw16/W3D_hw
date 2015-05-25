@@ -19,8 +19,7 @@ body {
 <body>
 <div id="info">hw6</div>
     
-<script src="js/three.min.js"></script>
-<script src="js/OrbitControls.js">  
+  
 </script>
     
 <script id="myVertexShader" type="x-shader/x-vertex">
@@ -36,8 +35,8 @@ body {
 
     void main() {
         vec4 color = texture2D(texture, vUv);
-        if (color.b > 0.85) discard;
-        else gl_FragColor = vec4(.2, .2, .2, 0.) + color;
+        if (color.b == 1.0) discard;
+        else gl_FragColor = color;
     }
 </script>
 <script type="x-shader/x-fragment" id="fragmentShaderDepth">
@@ -54,21 +53,24 @@ body {
 
     void main() {
         vec4 pixel = texture2D(texture, vUv);
-        if (pixel.b > 0.85) discard;
+        if (pixel.b == 1.0) discard;
         gl_FragData[0] = pack_depth(gl_FragCoord.z);
     }
 </script>
 
 <script src='js/three.min.js'></script>
 <script src='js/KeyboardState.js'></script>
-<script src='js/OrbitControls.js'>
-</script>
+<script src='js/OrbitControls.js'></script>
+<script src='js/stats.min.js'></script>    
 
 <script>
 
 var camera, scene, renderer, light, controls;
 var sceneRTT, rtTexture, charactor;
 var angle = 0;
+var stats;
+var quadcustomDepthMaterial;
+var clock = new THREE.Clock();
 
 init();
 animate();
@@ -113,6 +115,12 @@ function init() {
     camera.position.y = 100;
     camera.position.z = 500;
     camera.lookAt(new THREE.Vector3(0, 0, 0));
+    
+    stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	stats.domElement.style.zIndex = 100;
+	document.body.appendChild( stats.domElement );
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     var ambientLight = new THREE.AmbientLight(0x555555);
@@ -144,7 +152,7 @@ function init() {
     renderer.shadowMapType = THREE.PCFShadowMap;
 
     quad.castShadow = true;
-    quad.customDepthMaterial = new THREE.ShaderMaterial({
+    quadcustomDepthMaterial = new THREE.ShaderMaterial({
         side: THREE.DoubleSide,
         uniforms: {
             texture: {
@@ -155,14 +163,15 @@ function init() {
         vertexShader: document.getElementById('myVertexShader').textContent,
         fragmentShader: document.getElementById('fragmentShaderDepth').textContent
     });
+    quad.customDepthMaterial = quadcustomDepthMaterial;
     for (var i = -2; i <= 2; i++){
         for (var j = -2; j <= 2; j++) {
             var quadij = quad.clone();
             quadij.position.set (50*i,0,50*j);
+            quadij.customDepthMaterial =quadcustomDepthMaterial;
             scene.add (quadij);
-            
             quadij.castShadow = true;
-            quadij.customDepthMaterial = new THREE.ShaderMaterial({
+            /*quadij.customDepthMaterial = new THREE.ShaderMaterial({
                 side: THREE.DoubleSide,
                 uniforms: {
                     texture: {
@@ -172,7 +181,7 @@ function init() {
                     },
                 vertexShader: document.getElementById('myVertexShader').textContent,
                 fragmentShader: document.getElementById('fragmentShaderDepth').textContent
-                });
+                });*/
             }
         }
 
@@ -201,6 +210,8 @@ function animate() {
     angle += 0.02;
     if (charactor !== undefined) charactor.rotation.y = angle;
     */
+    var delta = clock.getDelta();
+    stats.update();
     controls.update();
     rotateBillboard (quad);
     requestAnimationFrame(animate);
