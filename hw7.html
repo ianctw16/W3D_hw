@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#container {
+    width:60%;
+    float:left;
+    background-color:white;
+   margin-top: 5px;
+}
+#cnvsFrame {
+    height: 0;
+    padding-bottom:100%;
+}
+
+.fl {
+    float:left;
+    margin:20px;
+}
+.flc {
+    float:right;
+    margin:5px;
+    width:30%;
+}
+body {
+    overflow: auto;
+}
+</style>
+</head>
+
+<body>
+<h1 style="text-align:center"> First three js game </h1>
+
+<div id="container">
+<div id="cnvsFrame">
+    <canvas id="cnvs"> </canvas>
+</div>
+</div>
+
+<audio id="soundtrack" autoplay loop style="display:none">
+<source src="BGM/BGM.mp3" type='audio/mp3'>
+</audio>    
+
+<script src='js/three.min.js'></script>
+<script src='js/KeyboardState.js'></script>
+<script src='js/OrbitControls.js'></script>
+
+<script>
+
+var camera, scene, renderer, geometry, material, mesh, controls;
+var pos, vel, pColor;
+var clock = new THREE.Clock();
+var puck;
+var pointLight;
+var smallgeometry;
+var mouse = new THREE.Vector2();
+var raycaster;
+    
+init();
+animate();
+
+function init() {
+    
+    soundTrack = document.getElementById ('soundtrack');
+    soundTrack.volume = 0.1;
+    
+    var theCanvas = document.getElementById("cnvs");
+    var theCanvasFrame = document.getElementById("cnvsFrame");
+    
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(50, theCanvasFrame.clientWidth / theCanvasFrame.clientHeight, 1, 1000);
+    camera.position.x = -100;
+    camera.position.y = 400;
+    camera.lookAt(new THREE.Vector3(0,0,0));
+    scene.add(camera);
+
+    geometry = new THREE.BoxGeometry(205, 30, 10);
+    smallgeometry = new THREE.BoxGeometry(60, 30, 10);
+    material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        color: 0xffffff,
+        opacity: 0.4
+    });
+    
+
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(0, 15, 105);
+    scene.add(mesh);
+    mesh2 = mesh.clone();
+    mesh2.position.set(0, 15, -105);
+    scene.add(mesh2);
+    //top
+    mesh3 = new THREE.Mesh(smallgeometry,material);
+    mesh3.rotation.y = Math.PI / 2;
+    mesh3.position.set(105, 15, 0);
+    scene.add(mesh3);
+    //bottom
+    mesh4 = mesh3.clone();
+    mesh4.rotation.y = Math.PI / 2;
+    mesh4.position.set(-105, 15, 0);
+    scene.add(mesh4);
+    
+    mesh3.name = "mesh3";
+    mesh4.name = "mesh4";
+
+    pos = new THREE.Vector3(0, 1, 0);
+    vel = new THREE.Vector3(50, 0, 70);
+    pColor = new THREE.Color();
+    pColor.setHSL(Math.random(), Math.random(), Math.random());
+    puck = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 2, 20),
+    new THREE.MeshBasicMaterial());
+    scene.add(puck);
+
+    pointLight = new THREE.PointLight(pColor.getHex(), 1);
+    scene.add(pointLight);
+
+    ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200, 130, 130),
+    new THREE.MeshLambertMaterial({
+        color: 0x888888
+    }));
+
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    renderer = new THREE.WebGLRenderer({
+        canvas: theCanvas,
+        antialias: true
+    });
+    var ww = theCanvasFrame.clientWidth;
+    var hh = theCanvasFrame.clientHeight;
+    renderer.setSize(ww, hh);
+    renderer.setClearColor(0x777777);
+
+    
+    //controls = new THREE.OrbitControls(camera, renderer.domElement);
+    var ambientLight = new THREE.AmbientLight(0x111111);
+    scene.add(ambientLight);
+
+    raycaster = new THREE.Raycaster();
+    renderer.autoClear = false;
+    window.addEventListener('resize', onWindowResize, false);
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    //document.body.appendChild(renderer.domElement);
+}
+
+function onWindowResize()
+{
+	var theCanvasFrame = document.getElementById("cnvsFrame");
+	var width= theCanvasFrame.clientWidth, height = theCanvasFrame.clientHeight;
+	camera.aspect = width / height;
+	camera.updateProjectionMatrix();
+	renderer.setSize (width, height);
+}    
+
+function onDocumentMouseMove(event) {
+    event.preventDefault();
+    mouse.x = ((event.clientX-event.target.offsetLeft) / theCanvasFrame.clientWidth) * 2 - 1;
+    mouse.y = -((event.clientY-event.target.offsetTop) / theCanvasFrame.clientHeight) * 2 + 1;
+
+    var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
+    raycaster.set(camera.position, vector.sub(camera.position).normalize());
+    var intersects = raycaster.intersectObjects(1);
+	
+	if (intersects.length > 0){
+		lastPosX = newPosX;
+		if(intersects[0].point.x+25>wall1.position.x-35){
+			mesh3.position.x=mesh.position.x-60;
+			mesh4.position.x=mesh.position.x-60;
+		}else if(intersects[0].point.x-25<wall2.position.x+35){
+			mesh3.position.x=mesh2.position.x+60;
+			mesh4.position.x=mesh2.position.x+60;
+		}else{
+			mesh3.position.x=intersects[0].point.x;
+			mesh4.position.x=intersects[0].point.x;
+		}
+    }
+}    
+    
+function animate() {
+    var dt = clock.getDelta();
+    pos.add(vel.clone().multiplyScalar(dt));
+
+    // collision
+    if (pos.x > 100) {
+        pos.x = 100;
+        vel.set(-vel.x, 0, vel.z);
+        pColor.setHSL(Math.random(), Math.random(), Math.random() / 2 + 0.5);
+    } else if (pos.x < -100) {
+        pos.x = -100;
+        vel.set(-vel.x, 0, vel.z);
+        pColor.setHSL(Math.random(), Math.random(), Math.random() / 2 + 0.5);
+    }
+    if (pos.z > 100) {
+        pos.z = 100;
+        vel.set(vel.x, 0, -vel.z);
+        pColor.setHSL(Math.random(), Math.random(), Math.random() / 2 + 0.5);
+    } else if (pos.z < -100) {
+        pos.z = -100;
+        vel.set(vel.x, 0, -vel.z);
+        pColor.setHSL(Math.random(), Math.random(), Math.random() / 2 + 0.5);
+    }
+
+    puck.position.copy(pos);
+    pointLight.position.set(pos.x, 10, pos.z);
+    pointLight.color = pColor;
+    puck.material.color = pColor;
+
+    //controls.update();
+
+    requestAnimationFrame(animate);
+    render();
+}
+
+function render() {
+    renderer.render(scene, camera);
+}
+
+
+
+</script>
+</body>
+
+</html>
